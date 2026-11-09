@@ -12,6 +12,7 @@ import {EmptyState,Notice,PageHeader,StatusBadge} from '../components/UI';
 import {surveyMetricGroups} from '../data/seed';
 import {downloadDecisionBrief} from '../lib/decisionBrief';
 import {ProjectMediaGallery} from '../components/ProjectMediaGallery';
+import {ProjectLocationPanel} from '../components/ProjectLocationPanel';
 
 const steps=[
   {id:'case',label:'Case file',short:'Case'},
@@ -143,6 +144,7 @@ export function ProjectPage(){
     {notice&&<Notice tone="success">{notice}</Notice>}{error&&<Notice tone="warning">{error}</Notice>}
     <div className="project-state-line"><StatusBadge status={project.status}/><span>{projectBuildings.length} {projectBuildings.length===1?'building':'buildings'}</span><span>{projectEvidence.length} {projectEvidence.length===1?'source':'sources'}</span><span>{notApproved} {notApproved===1?'gate to resolve':'gates to resolve'}</span></div>
     <ProjectAccess project={project}/>
+    <ProjectLocationPanel project={project}/>
     {isRemote&&currentId==='case'&&<ProjectMediaGallery projectId={project.id}/>}
     <ActivityTimeline items={activity} loading={activityLoading}/>
     <ProjectJourneyNav steps={journeyGroups} current={currentGroupId} onChange={id=>setStep(journeyGroups.find(item=>item.id===id)?.firstStep??'case')}/>

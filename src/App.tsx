@@ -21,6 +21,7 @@ function RoutedApp(){
   return <WorkspaceProvider><Routes>
     <Route path="/auth" element={<GuestOnly/>}/>
     <Route path="/explore/dakota-crescent" element={<PublicDakotaPage/>}/>
+    <Route path="/explore/:slug" element={<PublicDakotaPage/>}/>
     <Route element={<RequireUser/>}><Route element={<AppShell/>}>
       <Route path="/" element={<DashboardPage/>}/>
       <Route path="/projects" element={<ProjectsPage/>}/>

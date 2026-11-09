@@ -27,7 +27,30 @@ const makeSlug=(value:string)=>value.toLowerCase().normalize('NFKD').replace(/[^
 const isRemoteMode=(mode:string|undefined)=>Boolean(supabase&&mode==='supabase');
 const strings=(value:unknown):string[]=>Array.isArray(value)?value.map(String):[];
 
-function mapProject(row:any):Project{return{id:String(row.id),slug:String(row.slug??''),name:String(row.name??''),description:String(row.description??''),country:String(row.country??''),region:String(row.region??''),status:row.status??'In research',ownerId:row.owner_id,createdAt:String(row.created_at??''),isCaseStudy:Boolean(row.is_case_study),visibility:row.visibility==='public'?'public':'private',assumptions:strings(row.assumptions)};}
+function mapProject(row:any):Project{
+  return {
+    id:String(row.id),
+    slug:String(row.slug??''),
+    name:String(row.name??''),
+    description:String(row.description??''),
+    country:String(row.country??''),
+    region:String(row.region??''),
+    status:row.status??'In research',
+    ownerId:row.owner_id,
+    createdAt:String(row.created_at??''),
+    isCaseStudy:Boolean(row.is_case_study),
+    visibility:row.visibility==='public'?'public':'private',
+    locationLabel:String(row.location_label??''),
+    latitude:row.latitude==null?null:Number(row.latitude),
+    longitude:row.longitude==null?null:Number(row.longitude),
+    publicLatitude:row.public_latitude==null?null:Number(row.public_latitude),
+    publicLongitude:row.public_longitude==null?null:Number(row.public_longitude),
+    locationPrecision:row.location_precision??'hidden',
+    publicGalleryEnabled:Boolean(row.public_gallery_enabled),
+    assumptions:strings(row.assumptions)
+  };
+}
+
 function mapBuilding(row:any):Building{return{id:String(row.id),projectId:String(row.project_id),name:String(row.name??''),address:String(row.address??''),buildingType:String(row.building_type??''),currentUse:String(row.current_use??''),yearBuilt:String(row.year_built??''),approximateArea:String(row.approximate_area??''),condition:row.condition??'Needs verification',notes:String(row.notes??''),documentedFacts:strings(row.documented_facts),unknowns:strings(row.unknowns),evidenceTitles:strings(row.evidence_titles)};}
 function mapEvidence(row:any):EvidenceItem{return{id:String(row.id),projectId:String(row.project_id),title:String(row.title??''),kind:row.kind??'Other',status:row.status??'Needs verification',source:String(row.source??''),sourceUrl:String(row.source_url??''),summary:String(row.summary??''),addedBy:String(row.added_by??''),date:String(row.evidence_date??row.created_at??'')};}
 function mapDataset(row:any):SurveyDataset{return{id:String(row.id),projectId:String(row.project_id),title:String(row.title??''),rowCount:Number(row.row_count??0),importedAt:String(row.created_at??''),fields:Array.isArray(row.aggregate_fields)?row.aggregate_fields:[],note:String(row.note??'')};}
@@ -101,7 +124,54 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
     setProjects(current=>[project,...current]);setMeasures(current=>[...genericRetrofitTemplate.map(item=>({...item,projectId:project.id,id:crypto.randomUUID()})),...current]);setGates(current=>[...genericDecisionGateTemplate.map(item=>({...item,projectId:project.id,id:crypto.randomUUID()})),...current]);setRoadmap(current=>[...genericRoadmap(project.id).map(item=>({...item,id:crypto.randomUUID()})),...current]);return project;
   },[isRemote,user,refresh]);
 
-  const updateProject=useCallback(async(project:Project)=>{if(isRemote&&supabase){const{error}=await supabase.from('projects').update({name:project.name,description:project.description,country:project.country,region:project.region,status:project.status,visibility:project.visibility==='public'?'public':'private',assumptions:project.assumptions??[],updated_at:new Date().toISOString()}).eq('id',project.id);if(error)throw error;if(user)await supabase.from('project_activity').insert({project_id:project.id,actor_id:user.id,entity_type:'project',entity_id:project.id,action:'updated',summary:project.visibility==='public'?'Project published publicly':'Project made private',metadata:{status:project.status,visibility:project.visibility}});}setProjects(current=>current.map(item=>item.id===project.id?project:item));},[isRemote,user]);
+  const updateProject=useCallback(async(project:Project)=>{
+  if(isRemote&&supabase){
+    const{error}=await supabase
+      .from('projects')
+      .update({
+        name:project.name,
+        description:project.description,
+        country:project.country,
+        region:project.region,
+        status:project.status,
+        visibility:project.visibility==='public'?'public':'private',
+        location_label:project.locationLabel??'',
+        latitude:project.latitude??null,
+        longitude:project.longitude??null,
+        public_latitude:project.publicLatitude??null,
+        public_longitude:project.publicLongitude??null,
+        location_precision:project.locationPrecision??'hidden',
+        public_gallery_enabled:Boolean(project.publicGalleryEnabled),
+        assumptions:project.assumptions??[],
+        updated_at:new Date().toISOString()
+      })
+      .eq('id',project.id);
+
+    if(error)throw error;
+
+    if(user){
+      await supabase.from('project_activity').insert({
+        project_id:project.id,
+        actor_id:user.id,
+        entity_type:'project',
+        entity_id:project.id,
+        action:'updated',
+        summary:project.visibility==='public'
+          ?'Project published publicly'
+          :'Project made private',
+        metadata:{
+          status:project.status,
+          visibility:project.visibility,
+          location_precision:project.locationPrecision??'hidden',
+          public_gallery_enabled:Boolean(project.publicGalleryEnabled)
+        }
+      });
+    }
+  }
+
+  setProjects(current=>current.map(item=>item.id===project.id?project:item));
+},[isRemote,user]);
+
   const addBuilding=useCallback(async(draft:BuildingDraft)=>{if(isRemote&&supabase&&user){const{data,error}=await supabase.from('buildings').insert({project_id:draft.projectId,name:draft.name,address:draft.address,building_type:draft.buildingType,current_use:draft.currentUse,year_built:draft.yearBuilt,approximate_area:draft.approximateArea,condition:draft.condition,notes:draft.notes,documented_facts:draft.documentedFacts,unknowns:draft.unknowns,evidence_titles:draft.evidenceTitles,created_by:user.id}).select().single();if(error)throw error;const item=mapBuilding(data);setBuildings(current=>[...current,item]);return item;}const item={...draft,id:crypto.randomUUID()};setBuildings(current=>[...current,item]);return item;},[isRemote,user]);
   const updateBuilding=useCallback(async(item:Building)=>{if(isRemote&&supabase){const{error}=await supabase.from('buildings').update({name:item.name,address:item.address,building_type:item.buildingType,current_use:item.currentUse,year_built:item.yearBuilt,approximate_area:item.approximateArea,condition:item.condition,notes:item.notes,documented_facts:item.documentedFacts,unknowns:item.unknowns,evidence_titles:item.evidenceTitles}).eq('id',item.id);if(error)throw error;}setBuildings(current=>current.map(row=>row.id===item.id?item:row));},[isRemote]);
   const addEvidence=useCallback(async(draft:EvidenceDraft)=>{if(isRemote&&supabase&&user){const{data,error}=await supabase.from('evidence_items').insert({project_id:draft.projectId,title:draft.title,kind:draft.kind,status:draft.status,source:draft.source,source_url:draft.sourceUrl,summary:draft.summary,added_by:user.name,created_by:user.id,evidence_date:new Date().toISOString().slice(0,10)}).select().single();if(error)throw error;const item=mapEvidence(data);setEvidence(current=>[item,...current]);return item;}const item:EvidenceItem={...draft,id:crypto.randomUUID(),addedBy:user?.name??'Researcher',date:new Date().toISOString().slice(0,10)};setEvidence(current=>[item,...current]);return item;},[isRemote,user]);

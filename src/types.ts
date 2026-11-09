@@ -9,11 +9,51 @@ export type RecordStatus = 'Not started' | 'In progress' | 'Held' | 'Complete';
 export type DecisionGateStatus = 'Open' | 'Evidence linked' | 'Blocked' | 'Deferred' | 'Approved' | 'Rejected';
 export type ProjectRole = 'owner'|'member'|'viewer'|'contributor';
 
-export interface AppUser { id:string; email:string; name:string; mode:AuthMode; avatarUrl?:string; bio?:string; websiteUrl?:string; instagramUrl?:string; linkedinUrl?:string; xUrl?:string; }
-export interface ProfilePatch {name:string;bio:string;websiteUrl:string;instagramUrl:string;linkedinUrl:string;xUrl:string;avatarUrl?:string;}
+export interface AppUser {
+  id:string;
+  email:string;
+  name:string;
+  mode:AuthMode;
+  avatarUrl?:string;
+  bio?:string;
+  websiteUrl?:string;
+  instagramUrl?:string;
+  linkedinUrl?:string;
+  xUrl?:string;
+  publicProfile?:boolean;
+}
+
+export interface ProfilePatch {
+  name:string;
+  bio:string;
+  websiteUrl:string;
+  instagramUrl:string;
+  linkedinUrl:string;
+  xUrl:string;
+  avatarUrl?:string;
+  publicProfile?:boolean;
+}
+
 export interface Project {
-  id:string;slug:string;name:string;description:string;country:string;region:string;status:ProjectStatus;
-  ownerId?:string;createdAt:string;isCaseStudy?:boolean;visibility?:'private'|'public';assumptions:string[];
+  id:string;
+  slug:string;
+  name:string;
+  description:string;
+  country:string;
+  region:string;
+  status:ProjectStatus;
+  ownerId?:string;
+  createdAt:string;
+  isCaseStudy?:boolean;
+  visibility?:'private'|'public';
+  locationLabel?:string;
+  latitude?:number|null;
+  longitude?:number|null;
+  publicLatitude?:number|null;
+  publicLongitude?:number|null;
+  locationPrecision?:'exact'|'approximate'|'area'|'hidden';
+  publicGalleryEnabled?:boolean;
+  assumptions:string[];
 }
 export interface Building {id:string;projectId:string;name:string;address:string;buildingType:string;currentUse:string;yearBuilt:string;approximateArea:string;condition:BuildingCondition;notes:string;documentedFacts:string[];unknowns:string[];evidenceTitles:string[];}
 export interface EvidenceItem {id:string;projectId:string;title:string;kind:EvidenceKind;status:EvidenceStatus;source:string;sourceUrl:string;summary:string;addedBy:string;date:string;}

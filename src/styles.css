@@ -211,3 +211,124 @@ body { overflow-x: hidden; }
     min-width: 0;
   }
 }
+.project-location-panel{
+  margin:0 0 24px;
+  padding:22px 24px;
+}
+
+.project-location-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  padding-bottom:17px;
+  border-bottom:1px solid var(--line);
+}
+
+.project-location-heading h2{
+  margin:0;
+  color:var(--ink);
+  font:500 25px/1.18 Georgia,"Times New Roman",serif;
+}
+
+.project-location-heading p:not(.page-kicker){
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+
+.project-location-heading>svg{
+  color:var(--blue);
+  flex:0 0 auto;
+}
+
+.project-location-content{
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(230px,.75fr);
+  gap:20px;
+  padding-top:19px;
+}
+
+.project-location-map{
+  min-height:260px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:#ecebe4;
+}
+
+.project-location-map iframe{
+  display:block;
+  width:100%;
+  height:260px;
+  border:0;
+}
+
+.project-location-empty{
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:25px;
+  color:var(--blue);
+  text-align:center;
+}
+
+.project-location-empty strong{
+  color:var(--ink);
+  font-size:13px;
+}
+
+.project-location-empty span{
+  max-width:250px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+}
+
+.project-location-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:10px;
+}
+
+.location-privacy-status{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border:1px solid var(--line);
+  background:#f7f4ea;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.location-privacy-status strong{
+  color:var(--ink);
+  font-size:12px;
+}
+
+.project-location-actions .button{
+  width:100%;
+}
+
+@media(max-width:760px){
+  .project-location-panel{
+    padding:19px 16px;
+  }
+
+  .project-location-content{
+    grid-template-columns:1fr;
+  }
+
+  .project-location-map,
+  .project-location-map iframe,
+  .project-location-empty{
+    min-height:230px;
+    height:230px;
+  }
+}

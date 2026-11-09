@@ -5,7 +5,7 @@ import {useWorkspace} from '../context/WorkspaceContext';
 import {Notice,StatusBadge} from '../components/UI';
 
 export function DashboardPage(){
-  const {projects,evidence,blockages,roadmap,loading,syncMessage,loadDakotaCase}=useWorkspace();
+  const {projects,evidence,blockages,roadmap,loading,loadDakotaCase}=useWorkspace();
   const [caseError,setCaseError]=useState('');
   const dakota=projects.find(project=>project.slug==='dakota-crescent');
   const activeProject=dakota??projects[0];
@@ -26,13 +26,17 @@ export function DashboardPage(){
       <div><p className="page-kicker">RESEARCH WORKSPACE</p><h1>Projects</h1><p className="page-description">See what needs checking, what is blocking a decision and what should happen next.</p></div>
       <Link className="button button-primary" to="/projects/new"><Plus size={17}/>New project</Link>
     </header>
-    <div className="workspace-status"><span className="status-led"/><span>{syncMessage}</span></div>
     {caseError&&<Notice tone="warning">{caseError}</Notice>}
 
     {dakota&&<>
       <section className="project-start-panel">
         <div className="project-start-copy"><p className="page-kicker">FIRST CASE</p><h2>{dakota.name}</h2><p>{dakota.description}</p><div className="project-start-meta"><span>{dakota.region}, {dakota.country}</span><span>{projectEvidence.length} sources</span><StatusBadge status={dakota.status}/></div></div>
-        <Link className="button button-primary" to={`/projects/${dakota.id}?step=case`}>Continue case <ArrowRight size={16}/></Link>
+        <Link
+  className="button button-primary project-open-button"
+  to={`/projects/${dakota.id}?step=case`}
+>
+  Open Dakota Crescent <ArrowRight size={16}/>
+</Link>
       </section>
       <section className="action-overview" aria-labelledby="attention-heading">
         <div className="action-overview-heading"><div><p className="page-kicker">WORK TO DO</p><h2 id="attention-heading">What needs attention</h2><p>Reclaim keeps uncertainty visible so a team can decide what to verify next.</p></div><Link className="text-link" to={`/projects/${dakota.id}?step=blockages`}>Open investigation <ArrowRight size={15}/></Link></div>
@@ -51,3 +55,4 @@ export function DashboardPage(){
     </section>
   </>;
 }
+

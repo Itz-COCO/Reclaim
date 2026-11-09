@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
-import {ArrowLeft,ArrowRight,Download,ExternalLink,Plus,Printer,Settings2} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Clock3,Download,ExternalLink,Plus,Printer,Settings2} from 'lucide-react';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
-import type {Blockage,Building,DecisionGate,MeasureStatus,Pathway,Project,RecordStatus,RetrofitMeasure,RoadmapItem} from '../types';
+import type {Blockage,Building,DecisionGate,MeasureStatus,Pathway,Project,ProjectActivity,RecordStatus,RetrofitMeasure,RoadmapItem} from '../types';
 import {useWorkspace} from '../context/WorkspaceContext';
 import {BlockageMap} from '../components/BlockageMap';
 import {ProjectJourneyNav} from '../components/ProjectJourneyNav';
@@ -11,6 +11,7 @@ import {SurveySummary} from '../components/SurveySummary';
 import {EmptyState,Notice,PageHeader,StatusBadge} from '../components/UI';
 import {surveyMetricGroups} from '../data/seed';
 import {downloadDecisionBrief} from '../lib/decisionBrief';
+import {ProjectMediaGallery} from '../components/ProjectMediaGallery';
 
 const steps=[
   {id:'case',label:'Case file',short:'Case'},
@@ -52,7 +53,7 @@ export function ProjectPage(){
     projects,buildings,evidence,datasets,blockages,pathways,measures,gates,roadmap,
     addBuilding,updateBuilding,addBlockage,updateBlockage,addPathway,updatePathway,
     addMeasure,updateMeasure,addGate,updateGate,addRoadmapItem,updateRoadmapItem,
-    updateProject,addSurveyDataset,loading,isRemote,
+    updateProject,addSurveyDataset,listProjectActivity,loading,isRemote,
   }=useWorkspace();
   const[editor,setEditor]=useState<EditorKind|null>(null);
   const[editing,setEditing]=useState<any>(undefined);
@@ -60,6 +61,8 @@ export function ProjectPage(){
   const[stress,setStress]=useState<string[]>([]);
   const[error,setError]=useState('');
   const[notice,setNotice]=useState('');
+  const[activity,setActivity]=useState<ProjectActivity[]>([]);
+  const[activityLoading,setActivityLoading]=useState(false);
   const project=projects.find(item=>item.id===projectId);
   const requestedStep=params.get('step');
   const currentId=steps.some(item=>item.id===requestedStep)?requestedStep as string:'case';
@@ -78,6 +81,32 @@ export function ProjectPage(){
   const previousStep=steps[stepIndex-1];
 
   useEffect(()=>{setStress(project?.assumptions??[]);},[project?.id,project?.assumptions]);
+  useEffect(()=>{
+  let active=true;
+
+  if(!isRemote||!projectId){
+    setActivity([]);
+    return;
+  }
+
+  setActivityLoading(true);
+
+  void listProjectActivity(projectId)
+    .then(rows=>{
+      if(active)setActivity(rows);
+    })
+    .catch(()=>{
+      if(active)setActivity([]);
+    })
+    .finally(()=>{
+      if(active)setActivityLoading(false);
+    });
+
+  return()=>{
+    active=false;
+  };
+},[isRemote,projectId,listProjectActivity]);
+
   function setStep(id:string){setError('');setNotice('');setParams({step:id});window.scrollTo({top:0,behavior:'smooth'});}
   function openEditor(kind:EditorKind,record?:any){setError('');setEditing(record);setEditor(kind);}
   function closeEditor(){setEditor(null);setEditing(undefined);}
@@ -114,6 +143,8 @@ export function ProjectPage(){
     {notice&&<Notice tone="success">{notice}</Notice>}{error&&<Notice tone="warning">{error}</Notice>}
     <div className="project-state-line"><StatusBadge status={project.status}/><span>{projectBuildings.length} {projectBuildings.length===1?'building':'buildings'}</span><span>{projectEvidence.length} {projectEvidence.length===1?'source':'sources'}</span><span>{notApproved} {notApproved===1?'gate to resolve':'gates to resolve'}</span></div>
     <ProjectAccess project={project}/>
+    {isRemote&&currentId==='case'&&<ProjectMediaGallery projectId={project.id}/>}
+    <ActivityTimeline items={activity} loading={activityLoading}/>
     <ProjectJourneyNav steps={journeyGroups} current={currentGroupId} onChange={id=>setStep(journeyGroups.find(item=>item.id===id)?.firstStep??'case')}/>
     {currentSubsteps.length>1&&<nav className="journey-subnav" aria-label={currentGroupId==='investigate'?'Investigation sections':'Planning sections'}><ol>{currentSubsteps.map(id=>{const item=steps.find(step=>step.id===id)!;return <li key={id}><button type="button" className={currentId===id?'active':''} aria-current={currentId===id?'page':undefined} onClick={()=>setStep(id)}>{item.label}</button></li>;})}</ol></nav>}
     <div className="project-step-content" key={`${project.id}-${currentId}`}>
@@ -130,6 +161,58 @@ export function ProjectPage(){
     <div className="step-pagination">{previousStep?<button type="button" className="button button-secondary" onClick={()=>setStep(previousStep.id)}><ArrowLeft size={15}/>{previousStep.short}</button>:<span/>}{nextStep&&<button type="button" className="button button-primary" onClick={()=>setStep(nextStep.id)}>Next: {nextStep.short}<ArrowRight size={15}/></button>}</div>
     {editor&&<RecordFormModal key={`${editor}-${editing?.id??'new'}`} kind={editor} projectId={projectId} initial={editing} buildings={projectBuildings} evidence={projectEvidence} onClose={closeEditor} onSave={saveRecord}/>}
   </>;
+}
+function ActivityTimeline({
+  items,
+  loading
+}:{
+  items:ProjectActivity[];
+  loading:boolean;
+}){
+  return (
+    <section className="activity-timeline surface-card" aria-labelledby="activity-heading">
+      <div className="activity-heading">
+        <div>
+          <p className="page-kicker">AUDIT TRAIL</p>
+          <h2 id="activity-heading">What changed?</h2>
+          <p>
+            Recent project changes are recorded here so decisions can be reviewed
+            rather than reconstructed from memory.
+          </p>
+        </div>
+        <Clock3 size={20} aria-hidden="true"/>
+      </div>
+
+      {loading ? (
+        <p className="small-muted">Loading recent changes…</p>
+      ) : items.length ? (
+        <ol className="activity-list">
+          {items.map(item=>(
+            <li key={item.id}>
+              <span className="activity-dot" aria-hidden="true"/>
+              <div>
+                <strong>{item.summary||'Project activity recorded'}</strong>
+                <span>
+                  {new Date(item.createdAt).toLocaleString([],{
+                    dateStyle:'medium',
+                    timeStyle:'short'
+                  })}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="activity-empty">
+          <strong>No changes recorded yet.</strong>
+          <span>
+            As the team updates project details, evidence and decision gates,
+            this trail will become the shared record of what moved.
+          </span>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function CaseStep({project,buildings,evidence,onAddBuilding,onEditBuilding,onEditProject,onOpenEvidence,onStartInvestigation}:{project:Project;buildings:Building[];evidence:any[];onAddBuilding:()=>void;onEditBuilding:(building:Building)=>void;onEditProject:()=>void;onOpenEvidence:()=>void;onStartInvestigation:()=>void}){

@@ -16,7 +16,16 @@ export function AppShell(){
       <nav id="main-navigation" className={`primary-nav ${menuOpen?'nav-open':''}`} aria-label="Main navigation">
         {links.map(link=><NavLink key={link.to} to={link.to} onClick={close} className={({isActive})=>`nav-link ${isActive||location.pathname.startsWith(link.match+'/')?'active':''}`}>{link.label}</NavLink>)}
         <span className={`storage-chip ${isRemote?'storage-cloud':'storage-local'}`}><i aria-hidden="true"/>{isRemote?'Cloud workspace':'Private workspace'}</span>
-        <Link className={`account-link ${location.pathname==='/account'?'active':''}`} to="/account" onClick={close}><span className="account-avatar">{user?.name?.trim().slice(0,1).toUpperCase()||<UserRound size={15}/>}</span><span>Account</span></Link>
+        {user?.mode==='supabase'&&
+  <Link
+    className={`nav-link ${location.pathname==='/platform'?'active':''}`}
+    to="/platform"
+    onClick={close}
+  >
+    Platform
+  </Link>
+}
+<Link className={`account-link ${location.pathname==='/account'?'active':''}`} to="/account" onClick={close}><span className="account-avatar">{user?.name?.trim().slice(0,1).toUpperCase()||<UserRound size={15}/>}</span><span>Account</span></Link>
       </nav>
     </header>
     <main className="workspace-main" id="main-content"><Outlet/></main>

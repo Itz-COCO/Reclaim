@@ -10,6 +10,8 @@ import {ProjectPage} from './pages/ProjectPage';
 import {EvidencePage} from './pages/EvidencePage';
 import {AccountPage} from './pages/AccountPage';
 import {PublicDakotaPage} from './pages/PublicDakotaPage';
+import {PlatformAdminPage} from './pages/PlatformAdminPage';
+
 
 function LoadingScreen(){return <div className="loading-screen"><img src="/reclaim-logo.jpg" alt=""/><span>Opening your workspace…</span></div>;}
 function RequireUser(){const {user,loading}=useAuth();if(loading)return <LoadingScreen/>;return user?<Outlet/>:<Navigate to="/auth" replace/>;}
@@ -26,6 +28,7 @@ function RoutedApp(){
       <Route path="/projects/:projectId" element={<ProjectPage/>}/>
       <Route path="/evidence" element={<EvidencePage/>}/>
       <Route path="/account" element={<AccountPage/>}/>
+      <Route path="/platform" element={<PlatformAdminPage/>}/>
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Route></Route>
   </Routes></WorkspaceProvider>;

@@ -1,0 +1,4 @@
+Reclaim product release
+UI/UX-clean final package
+Includes public Dakota case route, curated publication, platform owner/operator permissions, profiles, avatars, social links, location discovery and moderated media foundations.
+Technical connection-status banners are intentionally not part of the product UI.

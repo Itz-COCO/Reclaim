@@ -4,6 +4,7 @@ import {Link,useParams} from 'react-router-dom';
 import {supabase} from '../lib/supabase';
 import {demoProject,demoBuildings} from '../data/seed';
 import {Notice} from '../components/UI';
+import {ProfileAvatar} from '../components/ProfileAvatar';
 
 type PublicProject={
   id:string;
@@ -359,9 +360,7 @@ export function PublicDakotaPage(){
         {profile&&(
           <section className="public-owner-card">
             <div>
-              {profile.avatar_url&&(
-                <img src={profile.avatar_url} alt=""/>
-              )}
+              <ProfileAvatar src={profile.avatar_url} name={profile.full_name} size="owner" alt={`${profile.full_name||'Project owner'} profile image`}/>
 
               <div>
                 <p className="page-kicker">PROJECT OWNER</p>

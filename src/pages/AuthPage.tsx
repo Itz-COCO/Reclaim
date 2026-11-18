@@ -20,7 +20,7 @@ export function AuthPage(){
       <p className="page-kicker">{backendConfigured?'YOUR WORKSPACE':'PRIVATE WORKSPACE'}</p>
       <h2>{backendConfigured?(mode==='signup'?'Create an account':'Sign in'):'Open your workspace'}</h2>
       <p className="auth-intro">{backendConfigured?'Use your workspace account to continue.':'Your records stay private to this browser.'}</p>
-      {backendConfigured&&<div className="auth-tabs"><button className={mode==='signup'?'auth-tab active':'auth-tab'} onClick={()=>{setMode('signup');setError('');setNotice('');}}>Create account</button><button className={mode==='signin'?'auth-tab active':'auth-tab'} onClick={()=>{setMode('signin');setError('');setNotice('');}}>Sign in</button></div>}
+      {backendConfigured&&<div className="auth-tabs"><button type="button" className={mode==='signup'?'auth-tab active':'auth-tab'} onClick={()=>{setMode('signup');setError('');setNotice('');}}>Create account</button><button type="button" className={mode==='signin'?'auth-tab active':'auth-tab'} onClick={()=>{setMode('signin');setError('');setNotice('');}}>Sign in</button></div>}
       <form className="auth-form" onSubmit={submit}>
         {(!backendConfigured||mode==='signup')&&<label>Full name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" autoComplete="name" required={!backendConfigured||mode==='signup'}/></label>}
         <label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder={backendConfigured?'you@example.com':'Optional'} autoComplete="email" required={backendConfigured}/></label>

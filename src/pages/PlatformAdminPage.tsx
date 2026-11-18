@@ -148,7 +148,7 @@ export function PlatformAdminPage(){
         title="Platform management is restricted"
         body="Only a Reclaim platform owner can manage trusted operators."
         action={
-          <button
+          <button type="button"
             className="button button-secondary"
             onClick={()=>navigate('/projects')}
           >
@@ -238,7 +238,7 @@ export function PlatformAdminPage(){
             </select>
           </label>
 
-          <button
+          <button type="submit"
             className="button button-primary"
             disabled={busy}
           >

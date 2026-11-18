@@ -107,7 +107,31 @@ export function AuthProvider({children}:{children:ReactNode}){
   setUser(next);
 },
 
-    async uploadAvatar(file){if(!user)throw new Error('Sign in to update your profile.');if(!file.type.startsWith('image/'))throw new Error('Choose an image file.');if(file.size>5*1024*1024)throw new Error('Profile images must be 5 MB or smaller.');if(user.mode==='supabase'&&supabase){const extension=file.type.split('/')[1]||'jpg';const path=`${user.id}/avatar.${extension}`;const{error}=await supabase.storage.from('profile-avatars').upload(path,file,{upsert:true,contentType:file.type,cacheControl:'3600'});if(error)throw error;const{data}=supabase.storage.from('profile-avatars').getPublicUrl(path);const next={...user,avatarUrl:`${data.publicUrl}?v=${Date.now()}`};await supabase.auth.updateUser({data:{avatar_url:next.avatarUrl}});await supabase.from('profiles').update({avatar_url:next.avatarUrl}).eq('id',user.id);setUser(next);return next.avatarUrl;}const reader=new FileReader();const url=await new Promise<string>((resolve,reject)=>{reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Could not read that image.'));reader.readAsDataURL(file);});const next={...user,avatarUrl:url};localStore.writeUser(next);setUser(next);return url;},
+    async uploadAvatar(file){
+      if(!user)throw new Error('Sign in to update your profile.');
+      if(!file.type.startsWith('image/'))throw new Error('Choose an image file.');
+      if(file.size>5*1024*1024)throw new Error('Profile images must be 5 MB or smaller.');
+      if(user.mode==='supabase'&&supabase){
+        const extension=file.type.split('/')[1]||'jpg';
+        const path=`${user.id}/avatar.${extension}`;
+        const{error}=await supabase.storage.from('profile-avatars').upload(path,file,{upsert:true,contentType:file.type,cacheControl:'3600'});
+        if(error)throw error;
+        const{data}=supabase.storage.from('profile-avatars').getPublicUrl(path);
+        const next={...user,avatarUrl:`${data.publicUrl}?v=${Date.now()}`};
+        const{error:authError}=await supabase.auth.updateUser({data:{avatar_url:next.avatarUrl}});
+        if(authError)throw authError;
+        const{error:profileError}=await supabase.from('profiles').update({avatar_url:next.avatarUrl}).eq('id',user.id);
+        if(profileError)throw profileError;
+        setUser(next);
+        return next.avatarUrl;
+      }
+      const reader=new FileReader();
+      const url=await new Promise<string>((resolve,reject)=>{reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Could not read that image.'));reader.readAsDataURL(file);});
+      const next={...user,avatarUrl:url};
+      localStore.writeUser(next);
+      setUser(next);
+      return url;
+    },
     async requestPasswordReset(email){if(!supabase)throw new Error('Password recovery requires a configured Supabase project.');const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${window.location.origin}/auth?mode=recovery`});if(error)throw error;},
     async updatePassword(password){if(!supabase)throw new Error('Password update requires a configured Supabase project.');const {error}=await supabase.auth.updateUser({password});if(error)throw error;},
     async signOut(){if(user?.mode==='supabase'&&supabase){const {error}=await supabase.auth.signOut();if(error)throw error;}localStore.clearUser();setUser(null);},
